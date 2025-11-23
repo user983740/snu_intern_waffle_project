@@ -1,8 +1,12 @@
-import React, {useState} from 'react';
+import React, {useState, type JSX} from 'react';
+import SignUp from './SignUp';
 import './App.css';
 
-function App() {
-  const [count, setCount] = useState(0);
+type Screen = 'home' | 'login' | 'signup';
+
+function App(): JSX.Element {
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [screen, setScreen] = useState<Screen>('home');
 
   return (
     <div>
@@ -23,10 +27,21 @@ function App() {
             alignItems: 'center',
           }}
         >
-          <button style={textBtn}>로그인</button>
-          <button style={textBtn}>회원가입</button>
+          {isLoggedIn ? (
+            <div>님</div>
+          ) : (
+            <LoginBtn onClick={() => setScreen('login')} />
+          )}
+          <button style={textBtn} onClick={() => setScreen('signup')}>
+            회원가입
+          </button>
         </div>
       </header>
+      <body>
+        {screen === 'home' && <div>홈 화면</div>}
+        {screen === 'login' && <div>로그인 화면</div>}
+        {screen === 'signup' && <SignUp />}
+      </body>
     </div>
   );
 }
@@ -38,5 +53,13 @@ const textBtn: React.CSSProperties = {
   fontSize: '18px',
   padding: '0',
 };
+
+function LoginBtn({onClick}: {onClick: () => void}): JSX.Element {
+  return (
+    <button style={textBtn} onClick={onClick}>
+      로그인
+    </button>
+  );
+}
 
 export default App;
