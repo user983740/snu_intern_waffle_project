@@ -1,19 +1,50 @@
 // Signup.tsx
-import React, {useState, type JSX} from 'react';
+import React, {useState} from 'react';
+
+const API_BASE_URL = 'https://api-internhasha.wafflestudio.com';
+
+type SignUpRequest = {
+  authType: 'APPLICANT';
+  info: {
+    type: string;
+    name: string;
+    email: string;
+    password: string;
+    successCode: string;
+  };
+};
+
+type SignUpResponse = {
+  user: {
+    id: string;
+    userRole: 'APPLICANT';
+  };
+  token: string;
+};
 
 export const SignUp = () => {
+  // password form visibility states
   const [isSeenPassword, setIsSeenPassword] = useState(false);
   const [isSeenPasswordConfirm, setIsSeenPasswordConfirm] = useState(false);
+
+  // form field states
   const [userName, setUserName] = useState<string>('');
   const [password, setPassword] = useState<string>('');
   const [confirmPassword, setConfirmPassword] = useState<string>('');
   const [email, setEmail] = useState<string>('');
+
+  // form interaction states
   const [focused, setFocused] = useState<string | null>(null);
   const [showPasswordGuide, setShowPasswordGuide] = useState(false);
   const [showPasswordGuideConfirm, setShowPasswordGuideConfirm] =
     useState(false);
   const [isPass, setIsPass] = useState(false);
 
+  // submission states
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  // password validation checks
   const isOkayPasswordLength = password.length >= 8;
   const hasNumber = /\d/.test(password);
   const hasUpperCase = /[A-Z]/.test(password);
@@ -28,6 +59,7 @@ export const SignUp = () => {
     hasSpecialChar &&
     hasNoContinuousChars;
 
+  // overall form validity
   const isFormValid =
     userName !== '' &&
     password !== '' &&
@@ -35,6 +67,57 @@ export const SignUp = () => {
     email !== '' &&
     isPass &&
     isValidPassword;
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (!isFormValid || isSubmitting) return;
+
+    setIsSubmitting(true);
+    setErrorMessage(null);
+
+    const requestBody: SignUpRequest = {
+      authType: 'APPLICANT',
+      info: {
+        type: 'LOCAL', // 백엔드에서 요구하는 값으로 맞추기
+        name: userName,
+        email,
+        password,
+        successCode: '123456', // 실제로는 인증 메일 코드 등으로 교체
+      },
+    };
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/auth/user`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(requestBody),
+      });
+
+      if (!response.ok) {
+        const text = await response.text();
+        throw new Error(text || '회원가입에 실패했습니다.');
+      }
+
+      const data: SignUpResponse = await response.json();
+
+      // 예시: 토큰 저장 후 알림
+      localStorage.setItem('accessToken', data.token);
+      alert('회원가입이 완료되었습니다!');
+
+      // 이 다음에 라우터를 쓰고 있다면 로그인 후 페이지로 이동시키면 됨
+      // navigate('/'); 이런 식
+    } catch (error) {
+      if (error instanceof Error) {
+        setErrorMessage(error.message);
+      } else {
+        setErrorMessage('알 수 없는 오류가 발생했습니다.');
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   return (
     <div
@@ -53,9 +136,10 @@ export const SignUp = () => {
           gap: '30px',
         }}
       >
-        <h1> 회원가입</h1>
+        <h1>회원가입</h1>
 
         <form
+          onSubmit={handleSubmit}
           style={{
             display: 'flex',
             flexDirection: 'column',
@@ -63,6 +147,7 @@ export const SignUp = () => {
             alignItems: 'flex-start',
           }}
         >
+          {/* 이 아래부터는 네가 이미 만든 입력 UI 그대로 */}
           <div>
             <label style={labelStyle}>
               이름
@@ -159,16 +244,16 @@ export const SignUp = () => {
                 >
                   {isSeenPasswordConfirm ? '🙈' : '👁️'}
                 </span>
-                {showPasswordGuideConfirm && (
-                  <div
-                    style={{color: 'gray', fontSize: '14px', marginTop: '5px'}}
-                  >
-                    {isPass
-                      ? '비밀번호가 일치합니다.'
-                      : '비밀번호가 일치하지 않습니다.'}
-                  </div>
-                )}
               </div>
+              {showPasswordGuideConfirm && (
+                <div
+                  style={{color: 'gray', fontSize: '14px', marginTop: '5px'}}
+                >
+                  {isPass
+                    ? '비밀번호가 일치합니다.'
+                    : '비밀번호가 일치하지 않습니다.'}
+                </div>
+              )}
             </label>
           </div>
           <div>
@@ -186,21 +271,25 @@ export const SignUp = () => {
             </label>
           </div>
 
+          {errorMessage && (
+            <div style={{color: 'red', fontSize: '14px'}}>{errorMessage}</div>
+          )}
+
           <button
             type='submit'
-            disabled={!isFormValid}
+            disabled={!isFormValid || isSubmitting}
             style={{
               width: '620px',
               padding: '10px',
               fontSize: '16px',
-              backgroundColor: 'blue',
+              backgroundColor: isFormValid && !isSubmitting ? 'blue' : 'gray',
               color: 'white',
               border: 'none',
-              cursor: 'pointer',
+              cursor: isFormValid && !isSubmitting ? 'pointer' : 'default',
               borderRadius: '5px',
             }}
           >
-            회원가입
+            {isSubmitting ? '회원가입 중...' : '회원가입'}
           </button>
         </form>
       </div>
