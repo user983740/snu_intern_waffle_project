@@ -1,12 +1,13 @@
 import React, {useState, type JSX} from 'react';
-import SignUp from './SignUp';
 import './App.css';
+import {SignUp} from './SignUp';
+import {useAuth} from './AuthContext';
 
 type Screen = 'home' | 'login' | 'signup';
 
 function App(): JSX.Element {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [screen, setScreen] = useState<Screen>('home');
+  const {isLoggedIn, logout} = useAuth();
 
   return (
     <div>
@@ -28,7 +29,7 @@ function App(): JSX.Element {
           }}
         >
           {isLoggedIn ? (
-            <div>님</div>
+            <div>OOO님</div>
           ) : (
             <LoginBtn onClick={() => setScreen('login')} />
           )}
@@ -37,11 +38,11 @@ function App(): JSX.Element {
           </button>
         </div>
       </header>
-      <body>
+      <main>
         {screen === 'home' && <div>홈 화면</div>}
         {screen === 'login' && <div>로그인 화면</div>}
         {screen === 'signup' && <SignUp />}
-      </body>
+      </main>
     </div>
   );
 }
