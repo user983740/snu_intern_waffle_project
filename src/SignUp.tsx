@@ -1,5 +1,7 @@
 // Signup.tsx
 import React, {useState} from 'react';
+import {useAuth} from './AuthContext';
+import {useNavigate} from 'react-router-dom';
 
 const API_BASE_URL = 'https://api-internhasha.wafflestudio.com';
 
@@ -68,6 +70,9 @@ export const SignUp = () => {
     isPass &&
     isValidPassword;
 
+  const {loginWithToken} = useAuth();
+  const navigate = useNavigate();
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!isFormValid || isSubmitting) return;
@@ -78,10 +83,10 @@ export const SignUp = () => {
     const requestBody: SignUpRequest = {
       authType: 'APPLICANT',
       info: {
-        type: 'LOCAL', // 백엔드에서 요구하는 값으로 맞추기
+        type: 'APPLICANT',
         name: userName,
-        email,
-        password,
+        email: email,
+        password: password,
         successCode: '123456', // 실제로는 인증 메일 코드 등으로 교체
       },
     };
@@ -102,12 +107,9 @@ export const SignUp = () => {
 
       const data: SignUpResponse = await response.json();
 
-      // 예시: 토큰 저장 후 알림
-      localStorage.setItem('accessToken', data.token);
-      alert('회원가입이 완료되었습니다!');
+      await loginWithToken(data.token);
 
-      // 이 다음에 라우터를 쓰고 있다면 로그인 후 페이지로 이동시키면 됨
-      // navigate('/'); 이런 식
+      navigate('/');
     } catch (error) {
       if (error instanceof Error) {
         setErrorMessage(error.message);
@@ -297,14 +299,14 @@ export const SignUp = () => {
   );
 };
 
-const labelStyle: React.CSSProperties = {
+export const labelStyle: React.CSSProperties = {
   display: 'flex',
   flexDirection: 'column',
   alignItems: 'flex-start',
   gap: '10px',
 };
 
-const inputStyle = (isFocused: boolean): React.CSSProperties => ({
+export const inputStyle = (isFocused: boolean): React.CSSProperties => ({
   width: '620px',
   height: '30px',
   padding: '5px 10px',
@@ -314,7 +316,7 @@ const inputStyle = (isFocused: boolean): React.CSSProperties => ({
   boxSizing: 'border-box',
 });
 
-const eyeIconStyle: React.CSSProperties = {
+export const eyeIconStyle: React.CSSProperties = {
   position: 'absolute',
   right: '10px',
   top: '50%',

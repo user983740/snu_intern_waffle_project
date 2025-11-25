@@ -1,13 +1,13 @@
-import React, {useState, type JSX} from 'react';
+import React, {type JSX} from 'react';
 import './App.css';
 import {SignUp} from './SignUp';
+import {Home} from './Home';
+import {LogIn} from './LogIn';
 import {useAuth} from './AuthContext';
-
-type Screen = 'home' | 'login' | 'signup';
+import {Routes, Route, Link} from 'react-router-dom';
 
 function App(): JSX.Element {
-  const [screen, setScreen] = useState<Screen>('home');
-  const {isLoggedIn, logout} = useAuth();
+  const {isLoggedIn, user, logout} = useAuth();
 
   return (
     <div>
@@ -20,7 +20,18 @@ function App(): JSX.Element {
           borderBottom: '2px solid #ddd',
         }}
       >
-        <div style={{fontWeight: 'bold', fontSize: '18px'}}>스누인턴</div>
+        {/* 홈 화면으로 이동 */}
+        <Link
+          to='/'
+          style={{
+            fontWeight: 'bold',
+            fontSize: '18px',
+            textDecoration: 'none',
+            color: 'black',
+          }}
+        >
+          스누인턴
+        </Link>
         <div
           style={{
             display: 'flex',
@@ -29,19 +40,36 @@ function App(): JSX.Element {
           }}
         >
           {isLoggedIn ? (
-            <div>OOO님</div>
+            <>
+              <div>{user?.name}님</div>
+              <button style={textBtn} onClick={logout}>
+                로그아웃
+              </button>
+            </>
           ) : (
-            <LoginBtn onClick={() => setScreen('login')} />
+            <>
+              {/* 로그인 페이지로 이동 */}
+              <Link to='/login' style={textBtnLink}>
+                로그인
+              </Link>
+              {/* 회원가입 페이지로 이동 */}
+              <Link to='/signup' style={textBtnLink}>
+                회원가입
+              </Link>
+            </>
           )}
-          <button style={textBtn} onClick={() => setScreen('signup')}>
-            회원가입
-          </button>
         </div>
       </header>
-      <main>
-        {screen === 'home' && <div>홈 화면</div>}
-        {screen === 'login' && <div>로그인 화면</div>}
-        {screen === 'signup' && <SignUp />}
+
+      <main style={{padding: '20px'}}>
+        <Routes>
+          {/* 홈 화면 */}
+          <Route path='/' element={<Home />} />
+          {/* 로그인 화면 */}
+          <Route path='/login' element={<LogIn />} />
+          {/* 회원가입 화면 */}
+          <Route path='/signup' element={<SignUp />} />
+        </Routes>
       </main>
     </div>
   );
@@ -55,12 +83,10 @@ const textBtn: React.CSSProperties = {
   padding: '0',
 };
 
-function LoginBtn({onClick}: {onClick: () => void}): JSX.Element {
-  return (
-    <button style={textBtn} onClick={onClick}>
-      로그인
-    </button>
-  );
-}
+const textBtnLink: React.CSSProperties = {
+  ...textBtn,
+  textDecoration: 'none',
+  color: 'black',
+};
 
 export default App;
